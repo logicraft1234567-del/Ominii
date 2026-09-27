@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMINI AI LAW — Your AI Lawyer. Your AI Judge. Your AI Courtroom.</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='image/logo.png.png') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bgdeep: '#020308', panel: 'rgba(16,21,41,0.55)',
+          hairline: 'rgba(130,170,255,0.16)', hairlinestrong: 'rgba(130,170,255,0.32)',
+          neon: '#2fd8ff', neonsoft: '#6ee3ff', violet: '#9b5cff', violetsoft: '#c39bff',
+          ink: '#eaf0ff', muted: '#8b93b8', muted2: '#5c6488',
+          danger: '#ff5470', warning: '#ffb84d', success: '#33e29a',
+        },
+        fontFamily: {
+          display: ['Orbitron', 'sans-serif'], body: ['Sora', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'],
+        },
+        keyframes: {
+          halopulse: { '0%,100%': { transform: 'scale(1)', opacity: '0.8' }, '50%': { transform: 'scale(1.08)', opacity: '1' } },
+          floatbubble: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
+          ringspin: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
+        },
+        animation: {
+          halopulse: 'halopulse 4s ease-in-out infinite',
+          floatbubble: 'floatbubble 3.5s ease-in-out infinite',
+          ringspin: 'ringspin 14s linear infinite',
+        },
+      },
+    },
+  };
+</script>
+<style type="text/tailwindcss">
+  @layer base {
+    body { @apply bg-bgdeep text-ink font-body; }
+  }
+  @layer components {
+    .glass { @apply bg-panel border border-hairline backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/30; }
+    .btn { @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300; }
+    .btn-primary { @apply btn bg-gradient-to-br from-neon to-violet text-bgdeep hover:-translate-y-0.5 hover:brightness-110 shadow-lg shadow-neon/20; }
+    .btn-ghost { @apply btn bg-white/5 border border-hairline text-ink hover:bg-white/10 hover:border-hairlinestrong; }
+  }
+</style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+
+<!-- Ambient nebula + starfield background -->
+<div class="fixed inset-0 -z-10 bg-bgdeep bg-[radial-gradient(60%_45%_at_18%_12%,rgba(155,92,255,0.28),transparent_60%),radial-gradient(50%_40%_at_85%_20%,rgba(47,216,255,0.22),transparent_60%),radial-gradient(70%_60%_at_50%_100%,rgba(47,100,255,0.16),transparent_60%)]"></div>
+
+<nav class="sticky top-0 z-50 flex items-center justify-between px-[5vw] py-4 bg-bgdeep/60 backdrop-blur-xl border-b border-hairline">
+  <div class="flex items-center gap-2.5">
+    <img class="site-logo" src="{{ url_for('static', filename='image/logo.png.png') }}" alt="OMINI AI LAW logo">
+    <div class="font-display text-lg font-bold tracking-wide">OMINI <span class="bg-gradient-to-r from-neon to-violet bg-clip-text text-transparent">AI LAW</span></div>
+  </div>
+  <div class="hidden md:flex gap-8 text-sm text-muted">
+    <a href="#features" class="hover:text-ink transition-colors">Features</a>
+    <a href="#how" class="hover:text-ink transition-colors">How it Works</a>
+    <a href="#community" class="hover:text-ink transition-colors">Community</a>
+    <a href="#pricing" class="hover:text-ink transition-colors">Pricing</a>
+  </div>
+  <div class="flex gap-3">
+    {% if user %}
+      <a class="btn-ghost" href="{{ url_for('dashboard') }}">Dashboard</a>
+    {% else %}
+      <a class="btn-ghost" href="{{ url_for('login') }}">Login</a>
+      <a class="btn-primary" href="{{ url_for('signup') }}">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+<section class="grid md:grid-cols-2 items-center gap-10 max-w-[1440px] mx-auto px-[5vw] pt-16 pb-10">
+  <div>
+    <div class="inline-flex items-center gap-2 text-xs text-neonsoft border border-hairline px-3.5 py-1.5 rounded-full bg-neon/5 mb-6">
+      <span class="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_10px_#2fd8ff] animate-pulse"></span> Welcome to the Future of Justice
+    </div>
+    <h1 class="font-display text-4xl md:text-6xl leading-[1.08] tracking-wide mb-4">
+      OMINI <span class="bg-gradient-to-r from-neon to-violetsoft bg-clip-text text-transparent">AI LAW</span>
+    </h1>
+    <p class="text-muted text-lg max-w-lg leading-relaxed mb-8">Understand laws, policies, resolve disputes, and get real legal answers — all powered by advanced AI and a futuristic 3D assistant.</p>
+    <div class="flex gap-4 mb-12">
+      <a class="btn-primary" href="{{ url_for('signup') }}">Get Started <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      <a class="btn-ghost" href="#how"><i data-lucide="play" class="w-3.5 h-3.5"></i> Watch Demo</a>
+    </div>
+    <div class="grid grid-cols-2 gap-3.5 max-w-xl">
+      <div class="glass flex items-center gap-3 p-4"><div class="w-8.5 h-8.5 rounded-[10px] bg-gradient-to-br from-neon/25 to-violet/25 flex items-center justify-center"><i data-lucide="shield" class="w-4 h-4"></i></div><div><div class="text-sm font-semibold">Privacy &amp; Policy Analyzer</div><div class="text-xs text-muted">Upload and understand any policy</div></div></div>
+      <div class="glass flex items-center gap-3 p-4"><div class="w-8.5 h-8.5 rounded-[10px] bg-gradient-to-br from-neon/25 to-violet/25 flex items-center justify-center"><i data-lucide="gavel" class="w-4 h-4"></i></div><div><div class="text-sm font-semibold">AI Courtroom</div><div class="text-xs text-muted">Resolve disputes with AI judge</div></div></div>
+      <div class="glass flex items-center gap-3 p-4"><div class="w-8.5 h-8.5 rounded-[10px] bg-gradient-to-br from-neon/25 to-violet/25 flex items-center justify-center"><i data-lucide="file-text" class="w-4 h-4"></i></div><div><div class="text-sm font-semibold">Contract Analyzer</div><div class="text-xs text-muted">Detect risks and clauses</div></div></div>
+      <div class="glass flex items-center gap-3 p-4"><div class="w-8.5 h-8.5 rounded-[10px] bg-gradient-to-br from-neon/25 to-violet/25 flex items-center justify-center"><i data-lucide="message-circle" class="w-4 h-4"></i></div><div><div class="text-sm font-semibold">Legal Questions</div><div class="text-xs text-muted">Ask anything, get real answers</div></div></div>
+    </div>
+  </div>
+
+  <div class="relative h-[520px] flex items-center justify-center">
+    <div class="absolute w-80 h-80 rounded-full bg-[radial-gradient(circle,rgba(47,216,255,0.35),rgba(155,92,255,0.18)_55%,transparent_72%)] blur-sm animate-halopulse"></div>
+    <div id="hero-robot" class="relative z-10" style="width:420px;height:460px;"></div>
+    <div class="absolute w-[78%] aspect-square rounded-full border border-neon/35 shadow-[0_0_40px_rgba(47,216,255,0.15)_inset] animate-ringspin pointer-events-none"></div>
+    <div class="glass absolute top-[8%] right-[2%] px-4.5 py-3 text-sm max-w-[210px] animate-floatbubble">Hey! I'm <b class="text-neonsoft">OMINI</b>. How can I help you today?</div>
+  </div>
+</section>
+
+<section class="max-w-[1440px] mx-auto px-[5vw] py-24" id="features">
+  <div class="text-center max-w-xl mx-auto mb-12">
+    <h2 class="font-display text-3xl mb-3">An entire legal operating system</h2>
+    <p class="text-muted">Everything you need to understand, protect, and defend your rights — in one AI-native workspace.</p>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+    {% set features = [
+      ('shield','Privacy Analyzer','Upload any privacy policy and get a plain-English breakdown with a danger score.'),
+      ('scroll-text','Terms of Service AI',"Explain Like I'm 10, spot hidden clauses, arbitration traps, and subscription tricks."),
+      ('gavel','AI Courtroom','Simulate a full trial — opening statement to verdict — with an impartial AI judge.'),
+      ('handshake','AI Mediator','Skip the courtroom. Let OMINI help both sides negotiate a fair settlement.'),
+      ('folder','Contract Analyzer','Scan NDAs, leases, and employment letters for red flags before you sign.'),
+      ('users','Community Court','Post real disputes, let the community weigh in as jurors, compare with the AI verdict.'),
+      ('book-open','Laws Explainer','A searchable library of laws explained simply, with real cases and timelines.'),
+      ('graduation-cap','AI Law School','Learn law interactively with lessons, quizzes, and mini courtroom games.'),
+    ] %}
+    {% for icon, title, desc in features %}
+    <div class="glass p-6 hover:-translate-y-1.5 hover:border-hairlinestrong transition-all duration-300">
+      <div class="w-11 h-11 rounded-2xl mb-4 bg-gradient-to-br from-neon/20 to-violet/20 border border-hairline flex items-center justify-center"><i data-lucide="{{ icon }}" class="w-5 h-5"></i></div>
+      <h3 class="text-base font-semibold mb-2">{{ title }}</h3>
+      <p class="text-sm text-muted leading-relaxed">{{ desc }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="text-center px-[5vw] py-20">
+  <h2 class="font-display text-3xl md:text-4xl mb-4">Justice, reimagined for the AI era.</h2>
+  <p class="text-muted mb-8">Join thousands using OMINI to make smarter legal decisions.</p>
+  <a class="btn-primary" href="{{ url_for('signup') }}">Create Your Free Account <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+</section>
+
+<footer class="px-[5vw] py-8 border-t border-hairline text-center text-muted2 text-sm">© 2026 OMINI AI LAW. This platform provides general legal information, not legal advice.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="{{ url_for('static', filename='js/robot.js') }}"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+  window.addEventListener("load", () => { OminiRobot.build("hero-robot"); });
+</script>
+</body>
+</html>

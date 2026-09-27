@@ -1,0 +1,47 @@
+# ---- Secrets / environment ----
+.env
+.env.*
+!.env.example
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Flask instance / local data ----
+instance/
+*.sqlite
+*.sqlite3
+*.db
+
+# ---- User-uploaded / generated content (local disk) ----
+uploads/
+static/uploads/
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- OS / editor cruft ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ---- Node (if you ever add a build step for Tailwind/etc.) ----
+node_modules/
+npm-debug.log*
+
+# ---- Test / coverage ----
+.pytest_cache/
+.coverage
+htmlcov/

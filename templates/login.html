@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — OMINI AI LAW</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='image/logo.png.png') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+<div class="ambient-bg"></div>
+
+<div class="auth-shell">
+
+  <!-- ================= LEFT / DESKTOP BRAND PANEL ================= -->
+  <div class="auth-panel">
+    <div class="auth-brand">
+      <img class="auth-brand-logo" src="{{ url_for('static', filename='image/logo.png.png') }}" alt="OMINI AI LAW logo">
+      <div class="auth-brand-name">OMINI <span class="t-gradient">AI LAW</span></div>
+    </div>
+
+    <div class="auth-robot-stage">
+      <div id="login-robot" style="width:340px;height:380px;"></div>
+      <div class="glass auth-speech-bubble">Welcome back! Justice never sleeps.</div>
+    </div>
+
+    <div class="auth-caption">
+      <strong>Your AI Lawyer. Your AI Judge. Your AI Courtroom.</strong>
+      Log in to continue your legal journey with OMINI.
+    </div>
+  </div>
+
+  <!-- ================= RIGHT / FORM (also the whole mobile page) ================= -->
+  <div class="auth-form-panel">
+    <div class="glass auth-card fade-up">
+
+      <div class="auth-logo-mobile">
+        <img class="site-logo site-logo--sm" src="{{ url_for('static', filename='image/logo.png.png') }}" alt="OMINI AI LAW logo">
+        <div class="auth-brand-name">OMINI <span class="t-gradient">AI LAW</span></div>
+      </div>
+
+      <h2 class="t-page" style="margin-bottom:6px;">Welcome Back</h2>
+      <p class="t-caption" style="margin-bottom:26px;">Login to continue your journey with OMINI.</p>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}{% for m in messages %}<div class="auth-flash">{{ m }}</div>{% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="field" style="margin-bottom:16px;">
+          <label class="field-label">Email or Username</label>
+          <div style="position:relative;">
+            <i data-lucide="mail" class="field-icon" style="width:16px;height:16px;"></i>
+            <input class="field-input has-icon touch-target" type="text" name="identifier" placeholder="Enter your email or username" required>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label class="field-label">Password</label>
+          <div style="position:relative;">
+            <i data-lucide="lock" class="field-icon" style="width:16px;height:16px;"></i>
+            <input class="field-input has-icon has-icon-right touch-target" type="password" name="password" id="pw" placeholder="Enter your password" required>
+            <i data-lucide="eye" class="field-icon-right" id="pw-toggle" style="width:16px;height:16px;"></i>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; color:var(--text-secondary); margin-bottom:22px;">
+          <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" style="accent-color:var(--blue);"> Remember me</label>
+          <a href="#" style="color:var(--blue);">Forgot password?</a>
+        </div>
+        <button class="btn btn-primary btn-block touch-target" type="submit">Login <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></button>
+      </form>
+
+      <div style="text-align:center; margin-top:22px; font-size:13.5px; color:var(--text-secondary);">
+        Don't have an account? <a href="{{ url_for('signup') }}" style="color:var(--cyan); font-weight:600;">Sign Up</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="{{ url_for('static', filename='js/robot.js') }}"></script>
+<script>
+  if (window.lucide) lucide.createIcons();
+  window.addEventListener("load", () => { if (window.OminiRobot) OminiRobot.build("login-robot"); });
+  document.getElementById("pw-toggle")?.addEventListener("click", () => {
+    const p = document.getElementById("pw");
+    p.type = p.type === "password" ? "text" : "password";
+  });
+</script>
+</body>
+</html>

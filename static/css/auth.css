@@ -1,0 +1,104 @@
+/* =========================================================
+   OMINI AI LAW — AUTH PAGES (login / signup)
+   Desktop: split screen, brand+robot left, form right.
+   Mobile: single centered card, no side panel, no socials.
+   ========================================================= */
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .auth-shell { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---- Left brand / robot panel (desktop only) ---- */
+.auth-panel {
+  display: none;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  border-right: 1px solid var(--card-border);
+  overflow: hidden;
+  background:
+    radial-gradient(65% 50% at 20% 10%, rgba(109,93,246,0.24), transparent 65%),
+    radial-gradient(55% 45% at 90% 20%, rgba(34,211,238,0.18), transparent 65%);
+}
+@media (min-width: 900px) { .auth-panel { display: flex; } }
+
+.auth-brand {
+  position: absolute; top: 32px; left: 40px;
+  display: flex; align-items: center; gap: 10px;
+}
+.auth-brand-mark {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e7fbff, var(--cyan) 45%, var(--purple) 100%);
+  box-shadow: 0 0 20px rgba(0,229,255,0.5);
+}
+.auth-brand-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+
+.auth-robot-stage {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-speech-bubble {
+  position: absolute; top: 6%; left: -6%;
+  max-width: 210px;
+  padding: 12px 16px;
+  font-size: 13px;
+  animation: bubble-float 3.6s ease-in-out infinite;
+}
+@keyframes bubble-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+.auth-caption {
+  position: absolute; bottom: 40px; left: 40px; right: 40px;
+  font-size: 13.5px; color: var(--text-secondary);
+}
+.auth-caption strong { display: block; color: var(--text); font-family: var(--font-display); font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+
+/* ---- Right / mobile-only form panel ---- */
+.auth-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 40px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px 28px;
+}
+@media (min-width: 640px) { .auth-card { padding: 44px; } }
+
+.auth-logo-mobile {
+  display: flex; align-items: center; gap: 9px; justify-content: center; margin-bottom: 22px;
+}
+@media (min-width: 900px) { .auth-logo-mobile { display: none; } }
+
+.auth-flash {
+  background: rgba(255,92,122,0.1); border: 1px solid rgba(255,92,122,0.35); color: #ffb3c1;
+  padding: 11px 14px; border-radius: 12px; font-size: 13px; margin-bottom: 16px;
+}
+
+.auth-guest-link {
+  display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--text-secondary);
+}
+.auth-guest-link:hover { color: var(--text); }
+
+/* ---- Password strength meter (signup) ---- */
+.pw-strength { display: flex; gap: 5px; margin-top: 8px; }
+.pw-strength-seg { height: 4px; flex: 1; border-radius: 3px; background: rgba(255,255,255,0.08); transition: background .25s var(--ease); }
+.pw-strength-label { font-size: 11.5px; margin-top: 6px; color: var(--text-tertiary); }
+.pw-strength.s1 .pw-strength-seg:nth-child(1) { background: var(--danger); }
+.pw-strength.s2 .pw-strength-seg:nth-child(-n+2) { background: var(--warning); }
+.pw-strength.s3 .pw-strength-seg:nth-child(-n+3) { background: var(--blue); }
+.pw-strength.s4 .pw-strength-seg { background: var(--success); }

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — OMINI AI LAW</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='image/logo.png.png') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bgdeep: '#020308', panel: 'rgba(16,21,41,0.55)',
+          hairline: 'rgba(130,170,255,0.16)', hairlinestrong: 'rgba(130,170,255,0.32)',
+          neon: '#2fd8ff', neonsoft: '#6ee3ff', violet: '#9b5cff', violetsoft: '#c39bff',
+          ink: '#eaf0ff', muted: '#8b93b8', muted2: '#5c6488',
+          danger: '#ff5470', warning: '#ffb84d', success: '#33e29a',
+        },
+        fontFamily: { display: ['Orbitron', 'sans-serif'], body: ['Sora', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+        keyframes: {
+          ringspin: { from: { transform: 'rotate(0deg)' }, to: { transform: 'rotate(360deg)' } },
+          bouncedot: { '0%,80%,100%': { transform: 'translateY(0)', opacity: '.4' }, '40%': { transform: 'translateY(-5px)', opacity: '1' } },
+        },
+        animation: { ringspin: 'ringspin 14s linear infinite', bouncedot: 'bouncedot 1s infinite' },
+      },
+    },
+  };
+</script>
+<style type="text/tailwindcss">
+  @layer base {
+    body { @apply bg-bgdeep text-ink font-body; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { @apply bg-gradient-to-b from-neon to-violet rounded-full; }
+  }
+  @layer components {
+    .glass { @apply bg-panel border border-hairline backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/30; }
+    .btn { @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300; }
+    .btn-primary { @apply btn bg-gradient-to-br from-neon to-violet text-bgdeep hover:-translate-y-0.5 hover:brightness-110 shadow-lg shadow-neon/20; }
+    .btn-ghost { @apply btn bg-white/5 border border-hairline text-ink hover:bg-white/10 hover:border-hairlinestrong; }
+    .nav-item { @apply w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-muted text-sm font-medium hover:bg-white/5 hover:text-ink transition-colors text-left; }
+    .nav-item.active { @apply bg-gradient-to-r from-neon/15 to-violet/15 text-ink shadow-[inset_3px_0_0_#2fd8ff]; }
+    .type-chip { @apply px-3.5 py-2 rounded-full border border-hairline text-xs text-muted cursor-pointer transition-colors; }
+    .type-chip.active { @apply bg-gradient-to-r from-neon to-violet text-bgdeep border-transparent; }
+    .field-textarea { @apply w-full p-3.5 bg-white/5 border border-hairline rounded-xl text-ink text-sm placeholder:text-muted focus:outline-none focus:border-neon focus:ring-2 focus:ring-neon/20; }
+    .tag { @apply text-[.68rem] px-2.5 py-0.5 rounded-full font-bold; }
+    .tag.low { @apply bg-success/15 text-success; }
+    .tag.medium { @apply bg-warning/15 text-warning; }
+    .tag.high { @apply bg-danger/15 text-danger; }
+    .risk-chip { @apply mt-1.5 inline-block; }
+    .msg { @apply max-w-[78%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap; }
+    .msg.user { @apply self-end bg-gradient-to-br from-neon to-violet text-bgdeep rounded-br-md ml-auto; }
+    .msg.omini { @apply self-start bg-white/5 border border-hairline rounded-bl-md; }
+    .msg.thinking { @apply self-start flex gap-1.5 px-4 py-3.5; }
+    .msg.thinking span { @apply w-1.5 h-1.5 rounded-full bg-neon animate-bouncedot; }
+    .msg.thinking span:nth-child(2) { animation-delay: .15s; }
+    .msg.thinking span:nth-child(3) { animation-delay: .3s; }
+    .empty-state { @apply text-center py-14 px-5 text-muted; }
+    .es-icon { @apply w-10 h-10 mx-auto mb-3 opacity-70; }
+    .result-block { @apply mb-[1.125rem]; }
+    .result-block h5 { @apply text-[.84rem] text-neonsoft uppercase tracking-wide mb-2; }
+    .result-block ul { @apply list-disc pl-[1.125rem] text-sm leading-relaxed; }
+    .redflag { @apply p-3.5 rounded-xl bg-danger/10 border border-danger/25 mb-2; }
+    .redflag .rf-clause { @apply text-sm font-semibold mb-1 flex items-center gap-1.5; }
+    .redflag .rf-why { @apply text-xs text-muted; }
+    .rf-icon { @apply w-3.5 h-3.5 flex-shrink-0 text-danger; }
+    /* ---- Rich analysis dashboard (privacy / contract / risk) ---- */
+    .stat-card { @apply glass p-4 flex flex-col gap-1 relative overflow-hidden; }
+    .stat-icon-wrap { @apply w-9 h-9 rounded-lg flex items-center justify-center mb-1; }
+    .stat-value { @apply font-mono text-2xl font-bold leading-none; }
+    .stat-label { @apply text-[.7rem] text-muted; }
+    .dtabs { @apply flex flex-wrap gap-1 mb-5 border-b border-hairline overflow-x-auto; }
+    .dtab { @apply flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-muted border-b-2 border-transparent hover:text-ink transition-colors whitespace-nowrap; }
+    .dtab.active { @apply text-neonsoft border-neon; }
+    .dpanel { @apply glass p-5; }
+    .dpanel-content.fade-in { animation: dfade .25s ease; }
+    @keyframes dfade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .ov-card { @apply glass p-4 flex gap-3 items-start; }
+    .ov-icon { @apply w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0; }
+    .donut-legend-row { @apply flex items-center justify-between py-2.5 border-b border-hairline last:border-b-0 text-sm; }
+    .legend-dot { @apply w-2.5 h-2.5 rounded-full inline-block mr-2 flex-shrink-0; }
+    .legend-view { @apply text-[.7rem] text-neonsoft hover:underline cursor-pointer; }
+    .rf-row { @apply grid grid-cols-[1fr_auto] gap-3 items-center py-3 border-b border-hairline last:border-b-0 text-sm cursor-pointer hover:bg-white/5 rounded-lg px-2 -mx-2 transition-colors; }
+    .danger-meter { @apply flex items-center gap-[1.125rem] mb-5; }
+    .gauge-wrap { @apply relative w-24 h-24 flex-shrink-0; }
+    .gauge-wrap svg { @apply -rotate-90; }
+    .gauge-num { @apply absolute inset-0 flex items-center justify-center font-mono font-bold text-lg; }
+    .verdict-card { @apply p-6; }
+    .verdict-outcome { @apply font-display text-xl mb-2; }
+    .verdict-conf { @apply text-muted text-sm mb-4; }
+    .activity-item { @apply flex items-center gap-3 py-2.5 border-b border-hairline last:border-b-0; }
+    .act-icon { @apply w-[2.125rem] h-[2.125rem] rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0; }
+    .act-body { @apply flex-1; }
+    .act-title { @apply text-sm; }
+    .act-time { @apply text-xs text-muted2; }
+    .progress-stage { @apply rounded-lg p-2.5 transition-all; }
+    .progress-stage.active { @apply bg-gradient-to-r from-neon/15 to-violet/15 border border-neon/30; }
+    .waveform-line { @apply h-1.5 bg-gradient-to-t from-neon to-violet rounded-full; }
+    .mic-pulse { animation: micPulse 1.5s ease-in-out infinite; }
+    @keyframes micPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+    @media (max-width: 1024px) { 
+      .courtroom-layout { @apply grid grid-cols-1; }
+      #section-courtroom .grid { @apply grid-cols-1; }
+    }
+    @media (max-width: 640px) {
+      #section-courtroom .grid { @apply grid-cols-1; }
+      .msg { @apply max-w-[85%] text-xs; }
+      #court-chat-log { @apply max-h-[300px]; }
+    }
+  }
+</style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+<div class="fixed inset-0 -z-10 bg-bgdeep bg-[radial-gradient(60%_45%_at_18%_12%,rgba(155,92,255,0.18),transparent_60%),radial-gradient(50%_40%_at_85%_10%,rgba(47,216,255,0.14),transparent_60%)]"></div>
+
+<div class="grid md:grid-cols-[250px_1fr] min-h-screen">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="hidden md:flex flex-col p-4 border-r border-hairline bg-black/20 sticky top-0 h-screen">
+    <div class="flex items-center gap-2.5 px-2 pb-5">
+      <img class="sidebar-logo" src="{{ url_for('static', filename='image/logo.png.png') }}" alt="OMINI AI LAW logo">
+      <div class="font-display text-sm font-bold">OMINI <span class="bg-gradient-to-r from-neon to-violet bg-clip-text text-transparent">AI LAW</span></div>
+    </div>
+    <ul class="flex-1 overflow-y-auto space-y-1" id="side-nav">
+      <li><button class="nav-item active" data-section="home"><i data-lucide="home" class="w-[18px] h-[18px]"></i> Home</button></li>
+      <li><button class="nav-item" data-section="ask"><i data-lucide="message-circle" class="w-[18px] h-[18px]"></i> Ask OMINI</button></li>
+      <li><button class="nav-item" data-section="privacy"><i data-lucide="shield" class="w-[18px] h-[18px]"></i> Privacy Analyzer</button></li>
+      <li><button class="nav-item" data-section="policy"><i data-lucide="scroll-text" class="w-[18px] h-[18px]"></i> Policy Analyzer</button></li>
+      <li><button class="nav-item" data-section="contract"><i data-lucide="folder" class="w-[18px] h-[18px]"></i> Contract Analyzer</button></li>
+      <li><button class="nav-item" data-section="risk"><i data-lucide="bar-chart-3" class="w-[18px] h-[18px]"></i> Risk Predictor</button></li>
+      <li><button class="nav-item" data-section="courtroom"><i data-lucide="gavel" class="w-[18px] h-[18px]"></i> Courtroom AI</button></li>
+      <li><button class="nav-item" data-section="community"><i data-lucide="users" class="w-[18px] h-[18px]"></i> Community Court</button></li>
+      <li><button class="nav-item" data-section="cases"><i data-lucide="folder-open" class="w-[18px] h-[18px]"></i> Cases</button></li>
+      <li><button class="nav-item" data-section="saved"><i data-lucide="archive" class="w-[18px] h-[18px]"></i> Saved Documents</button></li>
+      <li><button class="nav-item" data-section="notifications"><i data-lucide="bell" class="w-[18px] h-[18px]"></i> Notifications <span id="notif-badge" class="badge badge-danger hidden ml-auto">0</span></button></li>
+      <li><button class="nav-item" data-section="settings"><i data-lucide="settings" class="w-[18px] h-[18px]"></i> Settings</button></li>
+      <li><button class="nav-item" data-section="profile"><i data-lucide="user" class="w-[18px] h-[18px]"></i> Profile</button></li>
+    </ul>
+    <div class="border-t border-hairline pt-3.5 mt-2.5 space-y-3">
+      <div class="glass p-4">
+        <div class="flex items-center gap-2 mb-1.5"><i data-lucide="sparkles" class="w-4 h-4 text-neon"></i><span class="text-sm font-semibold">Upgrade to Premium</span></div>
+        <p class="text-[.72rem] text-muted mb-3 leading-snug">Unlock advanced analyzers, higher limits and more.</p>
+        <button class="btn-primary w-full text-xs py-2.5">Upgrade Now</button>
+      </div>
+      <a href="{{ url_for('logout') }}" class="btn-ghost w-full"><i data-lucide="log-out" class="w-4 h-4"></i> Logout</a>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="flex flex-col min-h-screen">
+    <div class="p-7 pb-16 flex-1">
+
+      <!-- ============ HOME ============ -->
+      <section class="dash-section" id="section-home">
+        <div class="mb-5">
+          <h1 class="font-display text-2xl mb-1.5">Good Evening, <span id="home-greeting-name">{{ user['full_name'].split(' ')[0] }}</span>!</h1>
+          <p class="text-muted text-sm">Ready to explore, analyze, or resolve something today?</p>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+          <div class="glass flex items-center gap-3.5 p-[1.125rem]"><div class="w-[2.625rem] h-[2.625rem] rounded-xl bg-gradient-to-br from-neon/20 to-violet/20 flex items-center justify-center"><i data-lucide="folder"></i></div><div><div class="font-mono text-xl font-bold" id="stat-cases">0</div><div class="text-[.74rem] text-muted">Cases Analyzed</div></div></div>
+          <div class="glass flex items-center gap-3.5 p-[1.125rem]"><div class="w-[2.625rem] h-[2.625rem] rounded-xl bg-gradient-to-br from-neon/20 to-violet/20 flex items-center justify-center"><i data-lucide="shield"></i></div><div><div class="font-mono text-xl font-bold" id="stat-policies">0</div><div class="text-[.74rem] text-muted">Policies Scanned</div></div></div>
+          <div class="glass flex items-center gap-3.5 p-[1.125rem]"><div class="w-[2.625rem] h-[2.625rem] rounded-xl bg-gradient-to-br from-neon/20 to-violet/20 flex items-center justify-center"><i data-lucide="gavel"></i></div><div><div class="font-mono text-xl font-bold" id="stat-courtroom">0</div><div class="text-[.74rem] text-muted">Courtroom Sessions</div></div></div>
+          <div class="glass flex items-center gap-3.5 p-[1.125rem]"><div class="w-[2.625rem] h-[2.625rem] rounded-xl bg-gradient-to-br from-neon/20 to-violet/20 flex items-center justify-center"><i data-lucide="check-circle-2"></i></div><div><div class="font-mono text-xl font-bold" id="stat-success">92%</div><div class="text-[.74rem] text-muted">Success Rate</div></div></div>
+        </div>
+
+        <div class="grid lg:grid-cols-[1.55fr_1fr] gap-5 items-start">
+          <div class="flex flex-col gap-5">
+
+            <!-- Talk to OMINI hero -->
+            <div class="glass p-[1.625rem]">
+              <div class="flex items-center justify-end mb-1">
+                <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs text-muted bg-bgdeep/60 border border-hairline whitespace-nowrap" id="home-status">
+                  <span class="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_8px_#2fd8ff]"></span> <span id="home-status-label">Idle</span>
+                </div>
+              </div>
+              <div class="grid md:grid-cols-[1.05fr_1fr] gap-6 items-center">
+                <div>
+                  <h3 class="text-lg font-semibold mb-1.5">Talk to <span class="bg-gradient-to-r from-neon to-violet bg-clip-text text-transparent">OMINI</span></h3>
+                  <p class="text-muted text-sm mb-4 leading-relaxed">Your AI legal assistant. Ask any legal question, analyze documents, predict risks, or explore your rights.</p>
+                  <div class="flex flex-col gap-2.5">
+                    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/5 border border-hairline text-sm">
+                      <i data-lucide="shield-check" class="w-4 h-4 text-neon flex-shrink-0"></i>
+                      <span><span class="font-medium">Trusted Legal AI</span><span class="text-muted text-xs block">Built for clarity and accuracy</span></span>
+                    </div>
+                    <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/5 border border-hairline text-sm">
+                      <i data-lucide="lock" class="w-4 h-4 text-violet flex-shrink-0"></i>
+                      <span><span class="font-medium">Secure &amp; Confidential</span><span class="text-muted text-xs block">Your data is always protected</span></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center justify-center min-h-[220px]">
+                  <div id="home-robot" style="width:260px;height:260px;"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2.5 mt-5 pl-[1.125rem] pr-2 py-2 rounded-full bg-white/5 border border-hairline">
+                <input type="text" id="home-chat-input" placeholder="Ask anything about laws, cases, documents..." class="flex-1 bg-transparent border-none outline-none text-sm text-ink placeholder:text-muted">
+                <button class="w-10 h-10 rounded-full bg-gradient-to-br from-neon to-violet text-bgdeep flex items-center justify-center" id="home-mic-btn" title="Voice input"><i data-lucide="mic" class="w-[18px] h-[18px]"></i></button>
+                <button class="w-10 h-10 rounded-full bg-gradient-to-br from-neon to-violet text-bgdeep flex items-center justify-center" id="home-send-btn" title="Send"><i data-lucide="send-horizontal" class="w-[18px] h-[18px]"></i></button>
+              </div>
+              <div class="flex gap-2 flex-wrap mt-3.5">
+                <div class="type-chip suggestion-chip" data-prompt="What can I do if my employer leaks my salary?">What are my rights as a tenant?</div>
+                <div class="type-chip suggestion-chip" data-prompt="Analyze my privacy policy for me.">How to file a small claims case?</div>
+                <div class="type-chip suggestion-chip" data-prompt="Start a courtroom with my friend.">Can my employer deduct my salary?</div>
+              </div>
+            </div>
+
+            <!-- Explore OMINI Tools -->
+            <div class="glass p-5">
+              <div class="flex items-center justify-between mb-3.5">
+                <h4 class="text-sm font-semibold">Explore OMINI Tools</h4>
+                <button class="text-xs text-neonsoft hover:underline" data-section="privacy">View All Tools <i data-lucide="arrow-right" class="w-3 h-3 inline"></i></button>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <button class="qa-btn flex flex-col items-center text-center gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 hover:bg-white/10 hover:border-hairlinestrong transition-colors" data-section="privacy">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-neon/25 to-neon/10 flex items-center justify-center"><i data-lucide="shield" class="w-5 h-5 text-neonsoft"></i></div>
+                  <div class="text-xs font-semibold">Privacy Analyzer</div>
+                  <div class="text-[.68rem] text-muted">Analyze privacy policies</div>
+                </button>
+                <button class="qa-btn flex flex-col items-center text-center gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 hover:bg-white/10 hover:border-hairlinestrong transition-colors" data-section="policy">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet/25 to-violet/10 flex items-center justify-center"><i data-lucide="scroll-text" class="w-5 h-5 text-violetsoft"></i></div>
+                  <div class="text-xs font-semibold">Policy Analyzer</div>
+                  <div class="text-[.68rem] text-muted">Understand terms of service</div>
+                </button>
+                <button class="qa-btn flex flex-col items-center text-center gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 hover:bg-white/10 hover:border-hairlinestrong transition-colors" data-section="contract">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-success/25 to-success/10 flex items-center justify-center"><i data-lucide="file-text" class="w-5 h-5 text-success"></i></div>
+                  <div class="text-xs font-semibold">Contract Analyzer</div>
+                  <div class="text-[.68rem] text-muted">Review contracts &amp; spot issues</div>
+                </button>
+                <button class="qa-btn flex flex-col items-center text-center gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 hover:bg-white/10 hover:border-hairlinestrong transition-colors" data-section="risk">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-warning/25 to-warning/10 flex items-center justify-center"><i data-lucide="trending-up" class="w-5 h-5 text-warning"></i></div>
+                  <div class="text-xs font-semibold">Risk Predictor</div>
+                  <div class="text-[.68rem] text-muted">Predict possible legal risks</div>
+                </button>
+                <button class="qa-btn flex flex-col items-center text-center gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 hover:bg-white/10 hover:border-hairlinestrong transition-colors" data-section="courtroom">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-danger/25 to-danger/10 flex items-center justify-center"><i data-lucide="gavel" class="w-5 h-5 text-danger"></i></div>
+                  <div class="text-xs font-semibold">Courtroom AI</div>
+                  <div class="text-[.68rem] text-muted">Simulate courtroom scenarios</div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-5">
+            <div class="glass p-5">
+              <div class="flex items-center justify-between mb-3.5">
+                <h4 class="text-sm font-semibold">Quick Actions</h4>
+                <button class="text-xs text-neonsoft hover:underline" data-section="cases">View all</button>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <button class="qa-btn flex flex-col items-start gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 text-sm hover:bg-white/10 hover:border-hairlinestrong text-left" data-section="privacy">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-neon to-neon/60 flex items-center justify-center"><i data-lucide="upload-cloud" class="w-4 h-4 text-bgdeep"></i></div>
+                  Upload Document<small class="text-muted block">PDF, DOCX, TXT</small>
+                </button>
+                <button class="qa-btn flex flex-col items-start gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 text-sm hover:bg-white/10 hover:border-hairlinestrong text-left" data-section="courtroom">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-success to-success/60 flex items-center justify-center"><i data-lucide="gavel" class="w-4 h-4 text-bgdeep"></i></div>
+                  Start Courtroom<small class="text-muted block">Simulate a case</small>
+                </button>
+                <button class="qa-btn flex flex-col items-start gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 text-sm hover:bg-white/10 hover:border-hairlinestrong text-left" data-section="ask">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet to-violet/60 flex items-center justify-center"><i data-lucide="message-square" class="w-4 h-4 text-white"></i></div>
+                  Ask Legal Question<small class="text-muted block">Get instant answer</small>
+                </button>
+                <button class="qa-btn flex flex-col items-start gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 text-sm hover:bg-white/10 hover:border-hairlinestrong text-left" data-section="community">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-warning to-warning/60 flex items-center justify-center"><i data-lucide="users" class="w-4 h-4 text-bgdeep"></i></div>
+                  Community Court<small class="text-muted block">Join public cases</small>
+                </button>
+                <button class="qa-btn flex flex-col items-start gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 text-sm hover:bg-white/10 hover:border-hairlinestrong text-left" data-section="privacy">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violetsoft to-violet flex items-center justify-center"><i data-lucide="shield" class="w-4 h-4 text-white"></i></div>
+                  Privacy Analyzer<small class="text-muted block">Analyze privacy policies</small>
+                </button>
+                <button class="qa-btn flex flex-col items-start gap-2 p-3.5 rounded-xl border border-hairline bg-white/5 text-sm hover:bg-white/10 hover:border-hairlinestrong text-left" data-section="risk">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-danger to-danger/60 flex items-center justify-center"><i data-lucide="bar-chart-3" class="w-4 h-4 text-white"></i></div>
+                  Risk Predictor<small class="text-muted block">Predict legal risks</small>
+                </button>
+              </div>
+            </div>
+            <div class="glass p-5">
+              <div class="flex items-center justify-between mb-3.5">
+                <h4 class="text-sm font-semibold">Recent Activity</h4>
+                <button class="text-xs text-neonsoft hover:underline" data-section="cases">View all</button>
+              </div>
+              <div id="recent-activity">
+                <div class="text-center py-6 px-2.5 text-muted">
+                  <i data-lucide="archive" class="w-9 h-9 mx-auto mb-3 opacity-60"></i>
+                  <p class="text-sm">No activity yet. Analyze a document or ask OMINI a question to get started.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-center text-muted2 text-xs italic mt-8">"Justice is not just a right, it's a knowledge." — OMINI</p>
+      </section>
+
+      <!-- ============ ASK OMINI ============ -->
+      <section class="dash-section hidden" id="section-ask">
+        <div class="flex items-start justify-between flex-wrap gap-3 mb-5">
+          <div><h2 class="font-display text-xl mb-1.5">Ask OMINI</h2><p class="text-muted text-sm max-w-lg">ChatGPT-level legal AI. Ask about tenancy, employment, IP, privacy, or anything else — OMINI remembers your conversation.</p></div>
+          <select id="jurisdiction-select" class="type-chip bg-white/5 text-ink">
+            <option value="">Any country</option>
+            <option value="Nigeria">Nigeria</option>
+            <option value="United States">United States</option>
+            <option value="United Kingdom">United Kingdom</option>
+            <option value="European Union">European Union</option>
+            <option value="Canada">Canada</option>
+          </select>
+        </div>
+        <div class="glass p-[1.625rem] min-h-[600px] flex flex-col">
+          <div class="flex flex-col gap-3 flex-1 overflow-y-auto max-h-[480px] p-1" id="ask-chat-log"></div>
+          <div class="flex items-center gap-2.5 mt-4 pl-[1.125rem] pr-2 py-2 rounded-full bg-white/5 border border-hairline">
+            <input type="text" id="ask-chat-input" placeholder="Ask a legal question..." class="flex-1 bg-transparent border-none outline-none text-sm text-ink placeholder:text-muted">
+            <button class="w-10 h-10 rounded-full bg-gradient-to-br from-neon to-violet text-bgdeep flex items-center justify-center" id="ask-mic-btn"><i data-lucide="mic" class="w-[18px] h-[18px]"></i></button>
+            <button class="w-10 h-10 rounded-full bg-gradient-to-br from-neon to-violet text-bgdeep flex items-center justify-center" id="ask-send-btn"><i data-lucide="send" class="w-[18px] h-[18px]"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PRIVACY ANALYZER ============ -->
+      <section class="dash-section hidden" id="section-privacy">
+        <div class="mb-5">
+          <h2 class="font-display text-xl mb-1.5">Privacy Policy Analyzer</h2>
+          <p class="text-muted text-sm max-w-lg">Upload a privacy policy and OMINI will explain what it means, flag dangerous clauses, and score the risk.</p>
+        </div>
+        <div class="grid lg:grid-cols-[1fr_2fr] gap-5 items-start">
+          <!-- Left: Upload Panel -->
+          <div class="glass p-6 sticky top-24">
+            <h4 class="font-semibold mb-4 text-sm">Upload Privacy Policy</h4>
+            <div class="p-8 text-center border-2 border-dashed border-hairlinestrong rounded-2xl cursor-pointer hover:border-neon hover:bg-neon/5 transition-colors mb-3.5" id="privacy-drop">
+              <input type="file" id="privacy-file" accept=".pdf,.docx,.txt" class="hidden">
+              <i data-lucide="upload-cloud" class="w-9 h-9 mx-auto mb-2.5 opacity-80"></i>
+              <h5 class="text-sm font-semibold mb-1">Drop file or click</h5>
+              <p class="text-xs text-muted">PDF, DOCX, or TXT (max 16MB)</p>
+            </div>
+            <textarea class="field-textarea min-h-[100px]" id="privacy-paste" placeholder="Or paste the policy text here..."></textarea>
+            <button class="btn-primary w-full mt-3.5" id="privacy-analyze-btn">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i> Analyze Policy
+            </button>
+            <div class="mt-4 p-3 rounded-xl bg-neon/10 border border-neon/20">
+              <p class="text-xs text-neonsoft leading-relaxed"><i data-lucide="info" class="w-3 h-3 inline mr-2"></i>OMINI analyzes data collection, user rights, and hidden risks automatically.</p>
+            </div>
+          </div>
+
+          <!-- Right: Results Panel -->
+          <div id="privacy-result">
+            <div class="text-center py-16 px-5 text-muted">
+              <i data-lucide="shield" class="w-12 h-12 mx-auto mb-3 opacity-70"></i>
+              <p class="text-sm">Upload or paste a privacy policy to see the analysis here.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ POLICY / TOS ANALYZER ============ -->
+      <section class="dash-section hidden" id="section-policy">
+        <div class="mb-5">
+          <h2 class="font-display text-xl mb-1.5">Terms of Service Analyzer</h2>
+          <p class="text-muted text-sm max-w-lg">Upload any Terms of Service. OMINI explains it, flags risks, and finds hidden clauses.</p>
+        </div>
+        
+        <div class="grid lg:grid-cols-[1fr_2fr] gap-5 items-start">
+          <!-- Left: Upload & Modes -->
+          <div class="glass p-6 sticky top-24">
+            <h4 class="font-semibold mb-3 text-sm">Analysis Mode</h4>
+            <div class="flex flex-col gap-1.5 mb-5">
+              <div class="type-chip active px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-mode="eli10">
+                <i data-lucide="lightbulb" class="w-3 h-3 inline mr-1"></i> Explain Like I'm 10
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-mode="lawyer">
+                <i data-lucide="scales" class="w-3 h-3 inline mr-1"></i> Explain Like a Lawyer
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-mode="risks">
+                <i data-lucide="alert-circle" class="w-3 h-3 inline mr-1"></i> Explain Risks
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-mode="summary">
+                <i data-lucide="file-text" class="w-3 h-3 inline mr-1"></i> Summarize
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-mode="hidden">
+                <i data-lucide="eye-off" class="w-3 h-3 inline mr-1"></i> Hidden Clauses
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-mode="money">
+                <i data-lucide="dollar-sign" class="w-3 h-3 inline mr-1"></i> Money Clauses
+              </div>
+            </div>
+
+            <h4 class="font-semibold mb-3 text-sm">Upload Document</h4>
+            <div class="p-8 text-center border-2 border-dashed border-hairlinestrong rounded-2xl cursor-pointer hover:border-neon hover:bg-neon/5 transition-colors mb-3.5" id="policy-drop">
+              <input type="file" id="policy-file" accept=".pdf,.docx,.txt" class="hidden">
+              <i data-lucide="upload-cloud" class="w-9 h-9 mx-auto mb-2.5 opacity-80"></i>
+              <h5 class="text-sm font-semibold mb-1">Drop file or click</h5>
+              <p class="text-xs text-muted">PDF, DOCX, or TXT (max 16MB)</p>
+            </div>
+            <textarea class="field-textarea min-h-[90px]" id="policy-paste" placeholder="Or paste the Terms of Service here..."></textarea>
+            <button class="btn-primary w-full mt-3.5" id="policy-analyze-btn">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i> Analyze Terms
+            </button>
+          </div>
+
+          <!-- Right: Results -->
+          <div id="policy-result">
+            <div class="text-center py-16 px-5 text-muted">
+              <i data-lucide="scroll-text" class="w-12 h-12 mx-auto mb-3 opacity-70"></i>
+              <p class="text-sm">Choose a mode and upload or paste Terms of Service to analyze.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CONTRACT ANALYZER ============ -->
+      <section class="dash-section hidden" id="section-contract">
+        <div class="mb-5">
+          <h2 class="font-display text-xl mb-1.5">Contract Analyzer</h2>
+          <p class="text-muted text-sm max-w-lg">Upload a contract, NDA, lease, or employment letter. OMINI detects red flags, missing clauses, and hidden fees.</p>
+        </div>
+        <div class="grid lg:grid-cols-[1fr_2fr] gap-5 items-start">
+          <!-- Left: Upload & Type Selection -->
+          <div class="glass p-6 sticky top-24">
+            <h4 class="font-semibold mb-3 text-sm">Document Type</h4>
+            <div class="flex flex-col gap-1.5 mb-5">
+              <div class="type-chip active px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-ctype="contract">
+                <i data-lucide="file-text" class="w-3 h-3 inline mr-1"></i> Contract
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-ctype="nda">
+                <i data-lucide="lock" class="w-3 h-3 inline mr-1"></i> NDA
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-ctype="lease">
+                <i data-lucide="home" class="w-3 h-3 inline mr-1"></i> Lease Agreement
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-ctype="employment">
+                <i data-lucide="briefcase" class="w-3 h-3 inline mr-1"></i> Employment Letter
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-ctype="loan">
+                <i data-lucide="credit-card" class="w-3 h-3 inline mr-1"></i> Loan Agreement
+              </div>
+            </div>
+
+            <h4 class="font-semibold mb-3 text-sm">Upload Document</h4>
+            <div class="p-8 text-center border-2 border-dashed border-hairlinestrong rounded-2xl cursor-pointer hover:border-neon hover:bg-neon/5 transition-colors mb-3.5" id="contract-drop">
+              <input type="file" id="contract-file" accept=".pdf,.docx,.txt" class="hidden">
+              <i data-lucide="upload-cloud" class="w-9 h-9 mx-auto mb-2.5 opacity-80"></i>
+              <h5 class="text-sm font-semibold mb-1">Drop file or click</h5>
+              <p class="text-xs text-muted">PDF, DOCX, or TXT (max 16MB)</p>
+            </div>
+            <textarea class="field-textarea min-h-[90px]" id="contract-paste" placeholder="Or paste the contract text here..."></textarea>
+            <button class="btn-primary w-full mt-3.5" id="contract-analyze-btn">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i> Analyze Document
+            </button>
+            <div class="mt-4 p-3 rounded-xl bg-danger/10 border border-danger/20">
+              <p class="text-xs text-danger leading-relaxed"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-2"></i>OMINI scans for unfair clauses, hidden fees, and risk areas.</p>
+            </div>
+          </div>
+
+          <!-- Right: Results -->
+          <div id="contract-result">
+            <div class="text-center py-16 px-5 text-muted">
+              <i data-lucide="folder" class="w-12 h-12 mx-auto mb-3 opacity-70"></i>
+              <p class="text-sm">Select document type and upload or paste to see risk breakdown.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ RISK PREDICTOR ============ -->
+      <section class="dash-section hidden" id="section-risk">
+        <div class="mb-5">
+          <h2 class="font-display text-xl mb-1.5">Legal Risk Predictor</h2>
+          <p class="text-muted text-sm max-w-lg">Describe a situation or upload a document. OMINI scores the overall risk, breaks it down by category, and flags what could go wrong.</p>
+        </div>
+        <div class="grid lg:grid-cols-[1fr_2fr] gap-5 items-start">
+          <!-- Left: Focus & Upload -->
+          <div class="glass p-6 sticky top-24">
+            <h4 class="font-semibold mb-3 text-sm">Risk Focus</h4>
+            <div class="flex flex-col gap-1.5 mb-5">
+              <div class="type-chip active px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-rtype="general">
+                <i data-lucide="bar-chart-3" class="w-3 h-3 inline mr-1"></i> General Risk
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-rtype="lawsuit">
+                <i data-lucide="gavel" class="w-3 h-3 inline mr-1"></i> Lawsuit Risk
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-rtype="financial">
+                <i data-lucide="dollar-sign" class="w-3 h-3 inline mr-1"></i> Financial / Fines
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-rtype="privacy">
+                <i data-lucide="shield" class="w-3 h-3 inline mr-1"></i> Privacy / Data
+              </div>
+              <div class="type-chip px-3 py-2.5 text-xs cursor-pointer hover:bg-white/10" data-rtype="compliance">
+                <i data-lucide="scroll-text" class="w-3 h-3 inline mr-1"></i> Compliance
+              </div>
+            </div>
+
+            <h4 class="font-semibold mb-3 text-sm">Upload Document</h4>
+            <div class="p-8 text-center border-2 border-dashed border-hairlinestrong rounded-2xl cursor-pointer hover:border-neon hover:bg-neon/5 transition-colors mb-3.5" id="risk-drop">
+              <input type="file" id="risk-file" accept=".pdf,.docx,.txt" class="hidden">
+              <i data-lucide="upload-cloud" class="w-9 h-9 mx-auto mb-2.5 opacity-80"></i>
+              <h5 class="text-sm font-semibold mb-1">Drop file or click</h5>
+              <p class="text-xs text-muted">PDF, DOCX, or TXT (max 16MB)</p>
+            </div>
+            <textarea class="field-textarea min-h-[90px]" id="risk-paste" placeholder="Or describe your situation / paste text here..."></textarea>
+            <button class="btn-primary w-full mt-3.5" id="risk-analyze-btn">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i> Predict Risk
+            </button>
+            <div class="mt-4 p-3 rounded-xl bg-warning/10 border border-warning/20">
+              <p class="text-xs text-warning leading-relaxed"><i data-lucide="alert-triangle" class="w-3 h-3 inline mr-2"></i>OMINI estimates likely outcomes — it isn't a substitute for a licensed attorney.</p>
+            </div>
+          </div>
+
+          <!-- Right: Results -->
+          <div id="risk-result">
+            <div class="text-center py-16 px-5 text-muted">
+              <i data-lucide="bar-chart-3" class="w-12 h-12 mx-auto mb-3 opacity-70"></i>
+              <p class="text-sm">Choose a focus and upload or describe a situation to see the risk breakdown.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COURTROOM AI ============ -->
+      <section class="dash-section hidden" id="section-courtroom">
+        <div class="mb-4">
+          <h2 class="font-display text-xl mb-1.5">Practice Courtroom</h2>
+          <p class="text-muted text-sm max-w-lg">Live interactive courtroom with OMINI AI Judge. Have a natural conversation about your case.</p>
+        </div>
+
+        <div class="grid lg:grid-cols-[1fr_350px] gap-5 items-stretch min-h-[700px]">
+          
+          <!-- ========== MAIN COURTROOM ========== -->
+          <div class="glass p-6 flex flex-col">
+            
+            <!-- Top: Session Info -->
+            <div class="flex items-center justify-between mb-4 pb-4 border-b border-hairline">
+              <div>
+                <input type="text" id="court-case-title" placeholder="Case: Unpaid loan / Contract dispute..." 
+                  class="font-semibold text-sm bg-transparent border-none outline-none text-ink mb-1 w-full focus:ring-2 focus:ring-neon/30 px-2 py-1 rounded">
+                <p class="text-xs text-muted"><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>Session: <span id="court-session-time">00:08:27</span></p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="w-8 h-8 rounded-lg bg-white/5 border border-hairline flex items-center justify-center hover:bg-white/10 text-neon" id="court-voice-toggle" title="Toggle OMINI voice on/off">
+                  <i data-lucide="volume-2" class="w-4 h-4"></i>
+                </button>
+                <button class="w-8 h-8 rounded-lg bg-white/5 border border-hairline flex items-center justify-center hover:bg-white/10 text-muted" id="court-settings-btn" title="Settings">
+                  <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+                <button class="w-8 h-8 rounded-lg bg-danger/10 border border-danger/30 flex items-center justify-center hover:bg-danger/20 text-danger" id="court-end-btn" title="End Session">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Courtroom Center: OMINI Judge -->
+            <div class="flex-1 flex flex-col items-center justify-center mb-4 relative min-h-[300px]">
+              <!-- Holographic Courtroom Background -->
+              <div class="absolute inset-0 rounded-2xl bg-gradient-to-b from-violet/10 via-bgdeep to-neon/5 border border-hairline/30 -z-10"></div>
+              
+              <!-- Judge Robot -->
+              <div class="relative mb-4">
+                <div class="w-48 h-48 rounded-full bg-gradient-to-br from-neon/20 via-violet/20 to-transparent border border-neon/30 flex items-center justify-center relative group">
+                  <!-- Holographic glow -->
+                  <div class="absolute inset-0 rounded-full bg-gradient-to-r from-neon/30 to-violet/30 blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                  <div id="court-judge-robot" style="width:180px;height:180px;"></div>
+                </div>
+                <!-- Thinking indicator -->
+                <div class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1 hidden" id="court-thinking-dots">
+                  <span class="w-2 h-2 rounded-full bg-neon animate-bouncedot"></span>
+                  <span class="w-2 h-2 rounded-full bg-neon animate-bouncedot" style="animation-delay:.15s"></span>
+                  <span class="w-2 h-2 rounded-full bg-neon animate-bouncedot" style="animation-delay:.3s"></span>
+                </div>
+              </div>
+
+              <!-- Judge Status -->
+              <div class="text-center">
+                <h3 class="font-display text-lg mb-1"><span class="bg-gradient-to-r from-neon to-violet bg-clip-text text-transparent">OMINI</span> — AI Judge</h3>
+                <p class="text-xs text-muted" id="court-judge-status">Ready to hear your case</p>
+              </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="bg-white/5 border border-hairline rounded-2xl p-4 flex flex-col h-72">
+              <!-- Chat Log -->
+              <div class="flex-1 overflow-y-auto mb-3 space-y-3" id="court-chat-log">
+                <div class="flex justify-start">
+                  <div class="max-w-xs bg-white/10 border border-hairline rounded-2xl rounded-bl-none px-4 py-3 text-sm">
+                    <p class="text-neonsoft font-semibold text-xs mb-1">OMINI Judge</p>
+                    <p class="text-ink">Good morning! I'm OMINI, your AI judge. Let's resolve this fairly and clearly. First, could you tell me the title of your case?</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chat Input -->
+              <div class="flex items-end gap-2.5">
+                <input type="text" id="court-chat-input" placeholder="Type your response or describe your side..." 
+                  class="flex-1 bg-white/5 border border-hairline rounded-full px-4 py-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-neon focus:ring-2 focus:ring-neon/20">
+                <button id="court-mic-btn" class="w-11 h-11 rounded-full bg-gradient-to-br from-neon to-violet text-bgdeep flex items-center justify-center hover:scale-105 transition-transform flex-shrink-0 relative group" title="Hold to speak">
+                  <i data-lucide="mic" class="w-5 h-5"></i>
+                  <div class="absolute -inset-1 rounded-full border border-neon/0 group-hover:border-neon/50 transition-all"></div>
+                </button>
+                <button id="court-send-btn" class="w-11 h-11 rounded-full bg-gradient-to-br from-violet to-neon text-bgdeep flex items-center justify-center hover:scale-105 transition-transform flex-shrink-0">
+                  <i data-lucide="send-horizontal" class="w-5 h-5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== SIDEBAR: Progress & History ========== -->
+          <div class="flex flex-col gap-4">
+            
+            <!-- Session Progress -->
+            <div class="glass p-4">
+              <h4 class="font-semibold text-xs mb-3 flex items-center gap-1.5">
+                <i data-lucide="target" class="w-3.5 h-3.5 text-neon"></i> Session Progress
+              </h4>
+              <div class="space-y-3 text-xs">
+                <div class="progress-stage active" data-stage="1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-5 h-5 rounded-full bg-gradient-to-br from-neon to-violet flex items-center justify-center text-bgdeep font-bold text-[10px]">1</div>
+                    <span class="font-semibold">Case Title</span>
+                  </div>
+                  <div class="text-muted text-[11px] ml-7">Describe your case</div>
+                </div>
+                <div class="progress-stage" data-stage="2">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-5 h-5 rounded-full border-2 border-hairline flex items-center justify-center text-muted font-bold text-[10px]">2</div>
+                    <span class="font-semibold text-muted">Your Statement</span>
+                  </div>
+                  <div class="text-muted text-[11px] ml-7">Tell your side</div>
+                </div>
+                <div class="progress-stage" data-stage="3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-5 h-5 rounded-full border-2 border-hairline flex items-center justify-center text-muted font-bold text-[10px]">3</div>
+                    <span class="font-semibold text-muted">Other Side</span>
+                  </div>
+                  <div class="text-muted text-[11px] ml-7">Defendant's view</div>
+                </div>
+                <div class="progress-stage" data-stage="4">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-5 h-5 rounded-full border-2 border-hairline flex items-center justify-center text-muted font-bold text-[10px]">4</div>
+                    <span class="font-semibold text-muted">Evidence</span>
+                  </div>
+                  <div class="text-muted text-[11px] ml-7">Upload or describe</div>
+                </div>
+                <div class="progress-stage" data-stage="5">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-5 h-5 rounded-full border-2 border-hairline flex items-center justify-center text-muted font-bold text-[10px]">5</div>
+                    <span class="font-semibold text-muted">Verdict</span>
+                  </div>
+                  <div class="text-muted text-[11px] ml-7">AI Judge's decision</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Evidence Upload -->
+            <div class="glass p-4">
+              <h4 class="font-semibold text-xs mb-3 flex items-center gap-1.5">
+                <i data-lucide="paperclip" class="w-3.5 h-3.5 text-warning"></i> Evidence
+              </h4>
+              <div class="p-3 border-2 border-dashed border-hairlinestrong rounded-lg cursor-pointer hover:border-neon hover:bg-neon/5 transition-colors mb-2" id="court-evidence-drop">
+                <input type="file" id="court-evidence-file" accept=".pdf,.docx,.jpg,.png,.mp4,.wav" class="hidden" multiple>
+                <div class="text-center">
+                  <i data-lucide="upload" class="w-5 h-5 mx-auto mb-1 opacity-60"></i>
+                  <p class="text-xs font-semibold">Drop files</p>
+                  <p class="text-[11px] text-muted">PDF, images, video, audio</p>
+                </div>
+              </div>
+              <div id="court-evidence-list" class="space-y-2 text-xs max-h-24 overflow-y-auto">
+                <p class="text-muted">No files uploaded yet</p>
+              </div>
+            </div>
+
+            <!-- Case Summary -->
+            <div class="glass p-4">
+              <h4 class="font-semibold text-xs mb-3 flex items-center gap-1.5">
+                <i data-lucide="book" class="w-3.5 h-3.5 text-violet"></i> Case Summary
+              </h4>
+              <div id="court-case-summary" class="text-xs text-muted space-y-2 max-h-40 overflow-y-auto">
+                <p>Case details will appear here as you describe your situation.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COMMUNITY COURT ============ -->
+      <section class="dash-section hidden" id="section-community">
+
+        <!-- ---- List view: create + browse your live sessions ---- -->
+        <div id="community-list-view">
+          <div class="mb-4">
+            <h2 class="font-display text-xl mb-1.5">Community Court</h2>
+            <p class="text-muted text-sm max-w-lg">Start a live session, bring in the other party and witnesses, and let OMINI hear everyone out.</p>
+          </div>
+
+          <div class="glass p-5 mb-5">
+            <h4 class="font-semibold text-sm mb-3">Start a new case</h4>
+            <div class="flex flex-col sm:flex-row gap-2.5">
+              <input type="text" id="community-new-title" placeholder="Case title (e.g. Unpaid rent deposit)" class="field-input flex-1">
+              <button class="btn-primary btn-block sm:w-auto" id="community-new-btn">Create Live Session</button>
+            </div>
+            <p id="community-new-msg" class="text-xs mt-2"></p>
+          </div>
+
+          <div class="glass p-5">
+            <h4 class="font-semibold text-sm mb-3">Your Live Sessions</h4>
+            <div id="community-cases-list" class="space-y-2.5">
+              <div class="text-center py-10 px-5 text-muted"><i data-lucide="gavel" class="w-9 h-9 mx-auto mb-3 opacity-70"></i><p>No community cases yet. Start one above.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---- Live session detail view ---- -->
+        <div id="community-detail-view" class="hidden">
+          <div class="flex items-center justify-between mb-4">
+            <button class="btn-ghost btn-sm" id="community-back-btn"><i data-lucide="arrow-left" class="w-4 h-4"></i> All Sessions</button>
+            <div class="flex items-center gap-2">
+              <button class="w-8 h-8 rounded-lg bg-white/5 border border-hairline flex items-center justify-center hover:bg-white/10 text-neon" id="community-voice-toggle" title="Toggle OMINI voice on/off">
+                <i data-lucide="volume-2" class="w-4 h-4"></i>
+              </button>
+              <span id="community-status-badge" class="badge badge-neutral">—</span>
+            </div>
+          </div>
+
+          <div class="grid lg:grid-cols-[1fr_340px] gap-5 items-start">
+
+            <!-- Main courtroom column -->
+            <div class="glass p-6 flex flex-col">
+              <div class="mb-4 pb-4 border-b border-hairline">
+                <h3 class="font-semibold text-base" id="community-case-title">Case title</h3>
+                <p class="text-xs text-muted" id="community-case-sub">—</p>
+              </div>
+
+              <div class="flex-1 flex flex-col items-center justify-center mb-4 relative min-h-[220px]">
+                <div class="absolute inset-0 rounded-2xl bg-gradient-to-b from-violet/10 via-bgdeep to-neon/5 border border-hairline/30 -z-10"></div>
+                <div class="relative mb-3">
+                  <div class="w-36 h-36 rounded-full bg-gradient-to-br from-neon/20 via-violet/20 to-transparent border border-neon/30 flex items-center justify-center relative group">
+                    <div class="absolute inset-0 rounded-full bg-gradient-to-r from-neon/30 to-violet/30 blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                    <div id="community-judge-robot" style="width:135px;height:135px;"></div>
+                  </div>
+                </div>
+                <h3 class="font-display text-base mb-1"><span class="bg-gradient-to-r from-neon to-violet bg-clip-text text-transparent">OMINI</span> — Community Judge</h3>
+                <p class="text-xs text-muted" id="community-judge-status">Waiting for the session to start...</p>
+              </div>
+
+              <div class="bg-white/5 border border-hairline rounded-2xl p-4 flex flex-col h-80">
+                <div class="flex-1 overflow-y-auto mb-3 space-y-3" id="community-chat-log"></div>
+                <div id="community-turn-banner" class="text-xs text-muted mb-2 hidden"></div>
+                <div class="flex items-end gap-2.5">
+                  <input type="text" id="community-chat-input" placeholder="Type your response..."
+                    class="flex-1 bg-white/5 border border-hairline rounded-full px-4 py-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:border-neon focus:ring-2 focus:ring-neon/20" disabled>
+                  <button id="community-mic-btn" class="w-11 h-11 rounded-full bg-gradient-to-br from-neon to-violet text-bgdeep flex items-center justify-center hover:scale-105 transition-transform flex-shrink-0 relative group" title="Hold to speak">
+                    <i data-lucide="mic" class="w-5 h-5"></i>
+                    <div class="absolute -inset-1 rounded-full border border-neon/0 group-hover:border-neon/50 transition-all"></div>
+                  </button>
+                  <button id="community-decline-answer-btn" class="btn-danger btn-sm hidden flex-shrink-0" title="Decline to answer">No</button>
+                  <button id="community-send-btn" class="w-11 h-11 rounded-full bg-gradient-to-br from-violet to-neon text-bgdeep flex items-center justify-center hover:scale-105 transition-transform flex-shrink-0" disabled>
+                    <i data-lucide="send-horizontal" class="w-5 h-5"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div id="community-verdict-box" class="glass p-4 mt-4 hidden border-neon/40"></div>
+            </div>
+
+            <!-- Sidebar column -->
+            <div class="flex flex-col gap-4">
+
+              <!-- Your invite response (if you're a pending invitee viewing this case) -->
+              <div class="glass p-4 hidden" id="community-my-invite-card">
+                <h4 class="font-semibold text-xs mb-2.5 flex items-center gap-1.5"><i data-lucide="mail-question" class="w-3.5 h-3.5 text-warning"></i> You've been invited</h4>
+                <p class="text-xs text-muted mb-3" id="community-my-invite-text"></p>
+                <div class="flex gap-2">
+                  <button class="btn-primary btn-sm flex-1" data-respond="accept">Accept</button>
+                  <button class="btn-danger btn-sm flex-1" data-respond="decline">Decline</button>
+                </div>
+              </div>
+
+              <!-- Participants -->
+              <div class="glass p-4">
+                <h4 class="font-semibold text-xs mb-3 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5 text-neon"></i> Participants</h4>
+                <div id="community-participants-list" class="space-y-2 text-xs"></div>
+              </div>
+
+              <!-- Add defendant -->
+              <div class="glass p-4 hidden" id="community-add-defendant-card">
+                <h4 class="font-semibold text-xs mb-2.5 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-3.5 h-3.5 text-violet"></i> Add Defendant</h4>
+                <div class="flex flex-col gap-2">
+                  <input type="email" id="community-defendant-email" placeholder="defendant@email.com" class="field-input text-xs">
+                  <button class="btn-primary btn-sm" id="community-defendant-invite-btn">Notify Defendant</button>
+                </div>
+                <p id="community-defendant-msg" class="text-xs mt-2"></p>
+              </div>
+
+              <!-- Add witnesses -->
+              <div class="glass p-4 hidden" id="community-add-witness-card">
+                <h4 class="font-semibold text-xs mb-2.5 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-3.5 h-3.5 text-cyan"></i> Add Your Witness <span class="text-muted" id="community-witness-count">(0/3)</span></h4>
+                <div class="flex flex-col gap-2">
+                  <input type="email" id="community-witness-email" placeholder="witness@email.com" class="field-input text-xs">
+                  <button class="btn-ghost btn-sm" id="community-witness-invite-btn">Notify Witness</button>
+                </div>
+                <p id="community-witness-msg" class="text-xs mt-2"></p>
+              </div>
+
+              <!-- Begin hearing -->
+              <button class="btn-primary btn-block hidden" id="community-begin-btn">Begin Hearing <i data-lucide="gavel" class="w-4 h-4"></i></button>
+
+              <!-- Evidence -->
+              <div class="glass p-4 hidden" id="community-evidence-card">
+                <h4 class="font-semibold text-xs mb-3 flex items-center gap-1.5"><i data-lucide="paperclip" class="w-3.5 h-3.5 text-warning"></i> Evidence</h4>
+                <div id="community-evidence-action" class="hidden">
+                  <div class="p-3 border-2 border-dashed border-hairlinestrong rounded-lg cursor-pointer hover:border-neon hover:bg-neon/5 transition-colors mb-2" id="community-evidence-drop">
+                    <input type="file" id="community-evidence-file" accept=".pdf,.docx,.jpg,.png,.mp4,.wav" class="hidden">
+                    <div class="text-center">
+                      <i data-lucide="upload" class="w-5 h-5 mx-auto mb-1 opacity-60"></i>
+                      <p class="text-xs font-semibold" id="community-evidence-filename">Drop a file (optional)</p>
+                    </div>
+                  </div>
+                  <textarea id="community-evidence-note" placeholder="Describe your evidence..." class="field-textarea text-xs mb-2" rows="2"></textarea>
+                  <div class="flex gap-2">
+                    <button class="btn-primary btn-sm flex-1" id="community-evidence-submit-btn">Submit</button>
+                    <button class="btn-danger btn-sm flex-1" id="community-evidence-decline-btn">I have none</button>
+                  </div>
+                </div>
+                <div id="community-evidence-list" class="space-y-2 text-xs mt-2 max-h-32 overflow-y-auto">
+                  <p class="text-muted">No evidence submitted yet.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CASES ============ -->
+      <section class="dash-section hidden" id="section-cases">
+        <div class="mb-5"><h2 class="font-display text-xl mb-1.5">Cases</h2><p class="text-muted text-sm">Your courtroom verdicts and case history.</p></div>
+        <div class="glass p-5" id="cases-list">
+          <div class="text-center py-10 px-5 text-muted"><i data-lucide="folder" class="w-9 h-9 mx-auto mb-3 opacity-70"></i><p>No cases yet. Run a Practice Courtroom session to see it here.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ SAVED DOCUMENTS ============ -->
+      <section class="dash-section hidden" id="section-saved">
+        <div class="mb-5"><h2 class="font-display text-xl mb-1.5">Saved Documents</h2><p class="text-muted text-sm">Every policy and contract you've analyzed, in one place.</p></div>
+        <div class="glass p-5" id="saved-docs-list">
+          <div class="text-center py-10 px-5 text-muted"><i data-lucide="archive" class="w-9 h-9 mx-auto mb-3 opacity-70"></i><p>Nothing analyzed yet.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ NOTIFICATIONS ============ -->
+      <section class="dash-section hidden" id="section-notifications">
+        <div class="mb-5"><h2 class="font-display text-xl mb-1.5">Notifications</h2><p class="text-muted text-sm">Community Court invitations waiting on your response.</p></div>
+        <div class="glass p-5" id="notifications-list">
+          <div class="text-center py-16 px-5 text-muted"><i data-lucide="bell" class="w-9 h-9 mx-auto mb-3 opacity-70"></i><p>You're all caught up.</p></div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="dash-section hidden" id="section-settings">
+        <div class="mb-5"><h2 class="font-display text-xl mb-1.5">Settings</h2><p class="text-muted text-sm">Manage your profile and account.</p></div>
+        <div class="grid gap-5 max-w-lg">
+
+          <div class="glass p-[1.375rem]">
+            <h4 class="font-semibold mb-1.5">Edit Profile</h4>
+            <p class="text-muted text-sm mb-4">Update the details on your account.</p>
+            <form id="settings-profile-form">
+              <div class="mb-3.5"><label class="block text-xs text-muted mb-1.5">Full Name</label><input type="text" name="full_name" id="settings-full-name" value="{{ user['full_name'] }}" class="field-textarea" required></div>
+              <div class="mb-3.5"><label class="block text-xs text-muted mb-1.5">Username</label><input type="text" name="username" id="settings-username" value="{{ user['username'] }}" class="field-textarea" required></div>
+              <div class="mb-1"><label class="block text-xs text-muted mb-1.5">Email</label><input type="email" name="email" id="settings-email" value="{{ user['email'] }}" class="field-textarea" required></div>
+              <div id="settings-profile-msg" class="text-xs mt-2 mb-1"></div>
+              <button type="submit" class="btn-primary mt-3.5" id="settings-profile-save">Save Changes</button>
+            </form>
+          </div>
+
+          <div class="glass p-[1.375rem]">
+            <h4 class="font-semibold mb-1.5">Change Password</h4>
+            <p class="text-muted text-sm mb-4">Leave blank if you don't want to change it.</p>
+            <form id="settings-password-form">
+              <div class="mb-3.5"><label class="block text-xs text-muted mb-1.5">Current Password</label><input type="password" name="current_password" id="settings-current-password" class="field-textarea" autocomplete="current-password"></div>
+              <div class="mb-1"><label class="block text-xs text-muted mb-1.5">New Password</label><input type="password" name="new_password" id="settings-new-password" class="field-textarea" autocomplete="new-password"></div>
+              <div id="settings-password-msg" class="text-xs mt-2 mb-1"></div>
+              <button type="submit" class="btn-primary mt-3.5" id="settings-password-save">Update Password</button>
+            </form>
+          </div>
+
+          <div class="glass p-[1.375rem]">
+            <h4 class="font-semibold mb-1.5">Account</h4>
+            <p class="text-muted text-sm mb-3.5">Signed in as <span id="settings-account-email">{{ user['email'] }}</span></p>
+            <a href="{{ url_for('logout') }}" class="btn-ghost">Logout</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PROFILE ============ -->
+      <section class="dash-section hidden" id="section-profile">
+        <div class="mb-5"><h2 class="font-display text-xl mb-1.5">Profile</h2><p class="text-muted text-sm">Your OMINI AI LAW account.</p></div>
+        <div class="glass p-[1.625rem] max-w-md">
+          <div class="flex items-center gap-4 mb-5">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-neon to-violet flex items-center justify-center font-bold text-2xl text-bgdeep" id="profile-avatar-initial">{{ user['full_name'][:1] }}</div>
+            <div><div class="font-bold text-base" id="profile-display-name">{{ user['full_name'] }}</div><div class="text-muted text-sm">@<span id="profile-display-username">{{ user['username'] }}</span></div></div>
+          </div>
+          <div class="mb-3.5"><label class="block text-xs text-muted mb-1.5">Email</label><input value="{{ user['email'] }}" disabled class="field-textarea opacity-70" id="profile-display-email"></div>
+          <div><label class="block text-xs text-muted mb-1.5">Member Since</label><input value="{{ user['created_at'] }}" disabled class="field-textarea opacity-70"></div>
+          <button type="button" class="btn-ghost mt-[1.125rem]" data-section="settings">Edit Profile</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>window.OMINI_USER_ID = {{ user['id'] }};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+<script src="{{ url_for('static', filename='js/robot.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
